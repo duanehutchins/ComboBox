@@ -1,0 +1,62 @@
+.combobox-container {
+  display: inline-block;
+  position: relative;
+}
+
+.combobox-container ul {
+  width: auto;
+  max-height: 10em;
+  overflow: auto;
+  border: 1px solid LightBlue;
+  border-top: 0px transparent none;
+  font-size: small;
+  padding: 1px;
+  list-style-type: none;
+  clear: both;
+  position: absolute;
+  background-color: white;
+  margin-top: 0px;
+}
+
+.combobox-container ul .option {
+  overflow: visible;
+  white-space: nowrap;
+  cursor: default;
+  height: 1em;
+  padding: 5px;
+  position: relative;
+}
+
+.combobox-container ul .option div {
+  position: absolute;
+}
+
+.combobox-container ul .highlighted, .combobox-container ul .option:hover,
+.combobox-container ul .highlighted div, .combobox-container ul .option:hover div {
+  background-color: RoyalBlue;
+  color: white;
+}
+
+.combobox-container input {
+  width: 191px;
+  padding: 1px;
+  padding-right: 19px;
+  padding-left: 2px;
+  margin-bottom: 0px;
+  overflow: hidden;
+}
+
+.combobox-container div.combobox-arrow {
+  display: inline-block;
+  position: absolute;
+  cursor: default;
+  vertical-align: text-bottom;
+  right: 2px;
+  top: 4px;
+  width: 16px;
+  height: 17px;
+  background-image: url('images/combobox-arrow.jpg');
+}
+.combobox-container div.combobox-arrow:hover {
+  background-image: url('images/combobox-arrow-hover.jpg');
+}
