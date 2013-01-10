@@ -1,6 +1,7 @@
 .combobox-container {
   display: inline-block;
   position: relative;
+  margin: 2px;
 }
 
 .combobox-container ul {
@@ -10,49 +11,42 @@
   border: 1px solid LightBlue;
   border-top: 0px transparent none;
   font-size: small;
-  padding: 1px;
+  padding: 0px 1px;
   list-style-type: none;
-  clear: both;
   position: absolute;
   background-color: white;
   margin-top: 0px;
+  left: 0px;
+  top: 0px;
 }
 
-.combobox-container ul .option {
+.combobox-container ul li {
+  margin: 0px;
+  padding: 2px;
   overflow: visible;
   white-space: nowrap;
   cursor: default;
-  height: 1em;
-  padding: 5px;
-  position: relative;
 }
 
-.combobox-container ul .option div {
-  position: absolute;
-}
-
-.combobox-container ul .highlighted, .combobox-container ul .option:hover,
-.combobox-container ul .highlighted div, .combobox-container ul .option:hover div {
+.combobox-container ul li.highlighted, .combobox-container ul li:hover {
   background-color: RoyalBlue;
   color: white;
 }
 
 .combobox-container input {
   width: 191px;
-  padding: 1px;
   padding-right: 19px;
   padding-left: 2px;
-  margin-bottom: 0px;
+  margin: 0px;
   overflow: hidden;
 }
 
 .combobox-container div.combobox-arrow {
-  display: inline-block;
   position: absolute;
   cursor: default;
   vertical-align: text-bottom;
   right: 2px;
-  top: 4px;
+  bottom: 2px;
   width: 16px;
   height: 17px;
   background-image: url('images/combobox-arrow.jpg');
