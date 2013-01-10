@@ -70,12 +70,15 @@
         	if(showAll) this.selectItem(this.selectedItem);
         	
         	// Second dropdown click will minimize
-        	if(showAll && $('li:hidden',listBox).length == 0) {
-          	if(this.selectedItem) {
+        	if(showAll) {
+          	this.selectItem(this.selectedItem);
+          	if(listBox.is(":visible")) {
             	this.collapse();
             	return this;
-          	}
-          	showAll = false;
+            	
+          	} else if(!this.selectedItem && searchText) {
+            	showAll = false;
+        	  }
         	}
         	  
         	// Prepare
@@ -221,6 +224,10 @@
       // Input Click -- stop propagation to body
       .on('click.ComboBox', function(event){
           event.stopPropagation();
+      })
+      
+      .on('dblclick.ComboBox', function(event){
+          if(!$(event.target).val()) ComboBox.showList(true);
       });
       
       // SelectArrow Click
