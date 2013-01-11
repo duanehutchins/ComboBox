@@ -29,6 +29,9 @@
         // jQuery element of selected Item
         selectedItem: null,
         
+        // Search Parameter
+        prevSearch: "",
+        
         /* SELECT ITEM */
         selectItem: function( item) {
           this.listBox.children().removeClass("highlighted");
@@ -64,51 +67,68 @@
         showList: function( showAll ) {
         	var listBox = this.listBox;
         	var searchText = this.textBox.val().toLowerCase();
+        	var quickSearch = (this.prevSearch.length > 2 && searchText.indexOf(this.prevSearch)==0);
+        	this.prevSearch = searchText;
         	
-        	// Show all options if box is empty and then place cursor in text box
-        	if(!searchText) showAll = true;
-        	if(showAll) this.selectItem(this.selectedItem);
-        	
-        	// Second dropdown click will minimize
-        	if(showAll) {
+        	// Show options if box is empty or the button is clicked
+        	if(showAll || !searchText) {
+          	
+          	// Place cursor in text box
           	this.selectItem(this.selectedItem);
+          	
+        	  // Second dropdown click will minimize
           	if(listBox.is(":visible")) {
-            	this.collapse();
-            	return this;
+            	return this.collapse();
             	
           	} else if(!this.selectedItem && searchText) {
-            	showAll = false;
-        	  }
-        	}
+            	return this.expand();
+            	
+        	  } else {
+          	  $('li',listBox).show();
+            	return this.expand();
+          	}
         	  
-        	// Prepare
-          $('li',listBox).show();
-        	this.expand();
-        	if(showAll) return this;
-        	
         	// Show matching results
-        	var that = null;
-      		$.each($('li',listBox).hide(), function() {
-        		var item_text = $(this).text().toLowerCase();
-        		
-        		// Skip if name isn't found or short name isn't at the beginning
-        		var n = item_text.search(searchText);
-            if(n<0) return; // Not found
-        		if(searchText.length <= 2 && n>0) return; // Short string search not found at beginning of text
-        		
-        		// Show item which was found
-        		$(this).show();
-          	
-          	//Auto-highlight item if it's the right text
-          	if(searchText && searchText === item_text) {
-          	  that = this;
-        	  }
-        	});
-        	
-        	// Select a match which matches exactly (case insensitive)
-        	this.selectItem(that);
-          
-        	return this;
+          } else {
+            var list = $('li',listBox);
+            if(quickSearch) {
+        	    this.expand();
+              list = list.filter(":visible");
+            }
+            
+            // Define search parameters
+            var _regex;
+            if(searchText.length <= 2) {
+              _regex = new RegExp( "^" + searchText, "i");
+            } else {
+              _regex = new RegExp( searchText, "i");
+            }
+            
+            // List search results
+            var that = null;
+            var foundSomething = false;
+            var _exact = new RegExp( "^" + searchText + "$", "i");
+            list.each(function() {
+                      if(_regex.test(this.innerText)) {
+                        
+                        // Check for an exact match
+                        if(!that && _exact.test(this.innerText)) that = this;
+                        $(this).show();
+                        foundSomething = true;
+                        
+                      } else {
+                        $(this).hide();
+                      }
+                    });
+            
+            if(foundSomething) {
+        	    this.expand();
+            } else {
+              this.collapse();
+            }
+                  
+            return this.selectItem(that);
+        	}
         },
         
         collapse: function(event) {
@@ -284,4 +304,12 @@
     });
 
   };
+    
+  // Case-insensitive text search
+  $.expr[":"].containsi = $.expr.createPseudo(function(arg) {
+    return function( elem ) {
+        return $(elem).text().toUpperCase().indexOf(arg.toUpperCase()) >= 0;
+    };
+  });
+  
 })( jQuery );
