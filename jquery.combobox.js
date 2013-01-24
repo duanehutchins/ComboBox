@@ -9,9 +9,14 @@
     {
       // Create ComboBox local reference
       var ComboBox = this;
+      var visibleList;
         
       $.extend(this,{
+        listArray: [],
+        
         listBox: $('<ul>'),
+        
+        selectBox: selectBox,
         
         selectArrow: $('<div>', { 
                       'class': "combobox-arrow"
@@ -34,20 +39,24 @@
         
         /* SELECT ITEM */
         selectItem: function( item) {
+          var itemIndex;
           this.listBox.children().removeClass("highlighted");
           
+          if(typeof item == "number") {
+            itemIndex = item;
+            item = this.listBox.children().eq(item);
+          } else {
+            item = $(item).eq(0);
+            itemIndex = item.index();
+          }
+          
           // If the sent item actually exists, then highlight it and set the select value.
-          if($(item,this.listBox).length !== 0) {
-            item = $(item).addClass("highlighted");
+          if(item && this.listBox.is(item.closest('ul'))) {
             
             // Set and highlight selection
-            this.selectedItem = item;
-            $("option",selectBox).filter(function() {
-              return this.text == item.text(); 
-            }).attr('selected', true);
-            
-            this.textBox.focus()
-                        .val(item.text());
+            this.selectedItem = item.addClass("highlighted");
+            this.selectBox.prop("selectedIndex",itemIndex).prop('disabled',false);
+            this.textBox.focus().val(item.text());
             
           // If the item doesn't exist, clear the select value
           } else {
@@ -58,7 +67,7 @@
             }
             
             this.selectedItem = null;
-            selectBox.val(null);
+            selectBox.val(null).prop('disabled',true);
           }
           return this;
         },
@@ -67,8 +76,7 @@
         showList: function( showAll ) {
         	var listBox = this.listBox;
         	var searchText = this.textBox.val().toLowerCase();
-        	var quickSearch = (this.prevSearch.length > 2 && searchText.indexOf(this.prevSearch)==0);
-        	this.prevSearch = searchText;
+        	var quickSearch = (visibleList && this.prevSearch.length > 2 && searchText.indexOf(this.prevSearch)==0);
         	
         	// Show options if box is empty or the button is clicked
         	if(showAll || !searchText) {
@@ -90,43 +98,32 @@
         	  
         	// Show matching results
           } else {
-            var list = $('li',listBox);
-            if(quickSearch) {
-        	    this.expand();
-              list = list.filter(":visible");
+        	  this.prevSearch = searchText;
+            if(!quickSearch) {
+              visibleList = $('li',listBox);
             }
             
-            // Define search parameters
-            var _regex;
-            if(searchText.length <= 2) {
-              _regex = new RegExp( "^" + searchText, "i");
-            } else {
-              _regex = new RegExp( searchText, "i");
-            }
+            // Update list search results and show them
+            visibleList = visibleList.hide()
+                            .filter(function(index) {
+                              var pos = this.innerText.toLowerCase().indexOf(searchText);
+                              if(pos < 0)
+                                return false;
+                              else if(pos == 0)
+                                return true;
+                              else if(searchText.length > 2)
+                                return true;
+                            })
+                            .show();
+            // Check for an exact match
+            var that = $.inArray(searchText,this.listArray);
+            if(that < 0) that = null;
             
-            // List search results
-            var that = null;
-            var foundSomething = false;
-            var _exact = new RegExp( "^" + searchText + "$", "i");
-            list.each(function() {
-                      if(_regex.test(this.innerText)) {
-                        
-                        // Check for an exact match
-                        if(!that && _exact.test(this.innerText)) that = this;
-                        $(this).show();
-                        foundSomething = true;
-                        
-                      } else {
-                        $(this).hide();
-                      }
-                    });
-            
-            if(foundSomething) {
+            if(visibleList.length > 0) {
         	    this.expand();
             } else {
               this.collapse();
             }
-                  
             return this.selectItem(that);
         	}
         },
@@ -149,50 +146,47 @@
         this.listBox
       ));
       
-      // Populate listBox
-      var opts = [];
-      var selection = null
-    	$.each($('option',selectBox), function() {
-      	var text = $.trim($(this).text());
-      	var val = $(this).val();
-      	// Ignore empties
-      	if(typeof val === 'undefined' || val === null || !text) return;
-      	
-      	// Append to list
-        if($(this).prop('selected')) {
-      	  opts.push('<li class="highlighted">'+text+'</li>');
-        } else {
-      	  opts.push('<li>'+text+'</li>');
-    	  }
-        
+      // Generate array list of options
+      var textToappend = "";
+      this.listArray = $.map($('option',selectBox), function(option, i) {
+        var text = $.trim($(option).text()) || "";
+        textToappend += '<li name="'+text+'">'+text+'</li>';
+        return text.toLowerCase();
       });
-      this.listBox.append(opts.join(''));
       
-      // Set initial selection without changing focus
-      this.selectItem($('li.highlighted',this.listBox));
+      // Populate listBox
+      if(textToappend) {
+        this.listBox.append(textToappend);
+        textToappend = null;
       
-      // Set all options to the longest width and then the correct position
-      var boxwidth = Math.max(this.listBox.get(0).scrollWidth, this.textBox.width());
-      $('li',this.listBox).width(boxwidth);
+        // Set initial selection without changing focus
+        if(selectBox.prop("selectedIndex") >= 0) {
+          this.selectItem(selectBox.prop("selectedIndex"));
+        }
       
-      // Minimum list height
-      var min_height = $('li',this.listBox).outerHeight();
-      
-      var text_border_width = this.textBox.css('border-width');
-      
-      // Match widths of input box and combo dropdown list
-      this.listBox.width(this.textBox.innerWidth())
-                  .css("overflow",'')
-                  .css("top",this.textBox.outerHeight())
-                  .css("min-height",min_height);
-      
-      // Adjust for IE not adjusting for scrollbars
-      if($.browser.msie && boxwidth > this.textBox.width()) {
-        this.listBox.css("padding-bottom",min_height);
-      }
-      
-      // This is so IE sizes the box right
-    	$('li',this.listBox).hide()
+        // Set all options to the longest width and then the correct position
+        var boxwidth = Math.max(this.listBox.get(0).scrollWidth, this.textBox.width());
+        $('li',this.listBox).width(boxwidth);
+        
+        // Minimum list height
+        var min_height = $('li',this.listBox).outerHeight();
+        
+        var text_border_width = this.textBox.css('border-width');
+        
+        // Match widths of input box and combo dropdown list
+        this.listBox.width(this.textBox.innerWidth())
+                    .css("overflow",'')
+                    .css("top",this.textBox.outerHeight())
+                    .css("min-height",min_height);
+        
+        // Adjust for IE not adjusting for scrollbars
+        if($.browser.msie && boxwidth > this.textBox.width()) {
+          this.listBox.css("padding-bottom",min_height);
+        }
+        
+        // This is so IE sizes the box right
+      	$('li',this.listBox).hide()
+    	}
     	this.collapse();
       
       // This blur is needed for the pseudo placeholder in IE
@@ -232,13 +226,17 @@
       .on('keyup.ComboBox', function(event){
         var keynum = event.keyCode || event.which;
           
-        //ignore keys under 48 (numeric) except for backspace, space, and delete
+        // Ignore keys under 48 (numeric) except for backspace, space, and delete
         if(keynum < 48 && keynum != 8 && keynum != 32 && keynum != 46)
           return;
+        
+        // Fast Typing
+        if(ComboBox.prevSearch && ComboBox.prevSearch == ComboBox.textBox.val().toLowerCase()) return;
         
         ComboBox.selectItem(null)
                 .showList()
                 .listBox.scrollTop(0);
+                  
       })
       
       // Input Click -- stop propagation to body
@@ -263,8 +261,7 @@
       
       // Select box is removed from form if there is no selection
       var formHandler = function(event) {
-        if(!ComboBox.selectedItem) 
-          selectBox.prop('disabled',true);
+        selectBox.prop('disabled',!ComboBox.selectedItem);
       };
       selectBox.closest('form').on('submit.ComboBox',formHandler);
       
@@ -287,7 +284,7 @@
         selectBox.removeData('ComboBox');
         
         // Unhide select field
-        selectBox.show();
+        selectBox.prop('disabled',false).show();
       };
     };
   
