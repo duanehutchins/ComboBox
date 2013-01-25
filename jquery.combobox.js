@@ -92,15 +92,20 @@
             	return this.expand();
             	
         	  } else {
-          	  $('li',listBox).show();
-            	return this.expand();
+            	$('li',listBox).not(":empty").show();
+            	this.expand();
+          	  if(this.selectedItem) {
+                var scrollto = (this.selectedItem.prevAll().not(":empty").length-1) * this.selectedItem.outerHeight();
+                ComboBox.listBox.scrollTop(scrollto);
+              }
+            	return this;
           	}
         	  
         	// Show matching results
           } else {
         	  this.prevSearch = searchText;
             if(!quickSearch) {
-              visibleList = $('li',listBox);
+              visibleList = $('li',listBox).not(":empty");
             }
             
             // Update list search results and show them
@@ -301,12 +306,5 @@
     });
 
   };
-    
-  // Case-insensitive text search
-  $.expr[":"].containsi = $.expr.createPseudo(function(arg) {
-    return function( elem ) {
-        return $(elem).text().toUpperCase().indexOf(arg.toUpperCase()) >= 0;
-    };
-  });
   
 })( jQuery );
