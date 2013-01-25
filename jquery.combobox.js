@@ -201,6 +201,14 @@
       // Navigate option list using up/down keys
       .on('keydown.ComboBox', function(event) {
         var keynum = event.keyCode || event.which;
+        
+        // Tabbing to another field
+        if(keynum == 9) {
+          ComboBox.collapse();
+          return;
+        }
+        
+        // Up/Down arrow keys
         if(!(keynum == 38 || keynum == 40)) return;
         
         var item = ComboBox.selectedItem;
